@@ -98,4 +98,3 @@ for url in pdfs["id"]:
 
 
 driver.quit()
-        

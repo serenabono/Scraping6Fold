@@ -4,8 +4,6 @@ import pandas as pd
 import csv
 from selenium.webdriver.chrome.options import Options
 import time
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.action_chains import ActionChains
 
 def generate_dataframe(bios, names):
@@ -29,7 +27,7 @@ def save_tables(table, filepath):
         wr = csv.writer(csvfile)
         for row in table.find_elements(By.CSS_SELECTOR,'tr'):
             text = list()
-            try: 
+            try:
                 link = row.find_elements(By.CSS_SELECTOR,'td')[0].find_element(By.TAG_NAME, 'a').get_attribute('href')
                 text.append(link)
             except:
@@ -38,22 +36,22 @@ def save_tables(table, filepath):
                 text.append(d.text)
             wr.writerow(text)
 
-def save_list(table, filepath):
+def save_list(table, filepath, identifier):
     with open(filepath, 'a', newline='') as csvfile:
-        wr = csv.writer(csvfile)
-        text = list()
-        print(table.find_elements(By.XPATH, "//*[contains(@class, 'round')]"))
-        for row in table.find_elements(By.XPATH, "//*[contains(@class, 'round')]"):
-            text = list()
-            for d in row.find_elements(By.CSS_SELECTOR,'li'):                
-                text.append(d.text)
-            wr.writerow(text)
+        csv_columns = ['docid','round','author','score']
+        wr = csv.DictWriter(csvfile, fieldnames=csv_columns)
+        i=0
+        for round in table.find_elements(By.XPATH, "//*[contains(@class, 'round')]"):
+            for d in round.find_elements(By.CSS_SELECTOR,'li'):
+                row = {"docid": identifier, "round": i, "author": d.find_elements(By.TAG_NAME, "span")[0].text, "score": d.find_elements(By.TAG_NAME, "span")[1].text}
+                wr.writerow(row)
+            i+=1
 
 def save_drop_menu_tables(table):
     for row in table.find_elements(By.CSS_SELECTOR,'tr'):
         docid = row.get_attribute("id")
         try: 
-            elem = row.find_elements(By.CSS_SELECTOR,'td')[0]
+            elem = row.find_elements(By.CSS_SELECTOR,'td')[4]
         except:
             continue
         actions = ActionChains(driver)
@@ -63,28 +61,29 @@ def save_drop_menu_tables(table):
         string = "votes"+str(docid)
         time.sleep(1)
         table = driver.find_element(By.ID, string)
-        save_list(table, "table_drop_down_menu.csv")
+        save_list(table, "table_drop_down_menu.csv", row.find_element(By.TAG_NAME, 'a').get_attribute('href'))
         string2 = "$('tr#votes" + str(docid) + "').slideUp();"
         driver.execute_script(string2)
+        time.sleep(1)
         
 
-def save_links(table):
-    links = []
-    for row in table.find_elements(By.CSS_SELECTOR,'tr'):
-        for d in row.find_elements(By.CSS_SELECTOR,'td'):
-            try: 
-                links.append(d.find_element(By.TAG_NAME, 'a').get_attribute('href'))
-            except:
-                pass
-    return links
+# def save_links(table):
+#     links = []
+#     for row in table.find_elements(By.CSS_SELECTOR,'tr'):
+#         for d in row.find_elements(By.CSS_SELECTOR,'td'):
+#             try: 
+#                 links.append(d.find_element(By.TAG_NAME, 'a').get_attribute('href'))
+#             except:
+#                 pass
+#     return links
 
-  
+
 chrome_options = Options()
 chrome_options.add_experimental_option('prefs',  {
     "download.default_directory": "/home/serena/Desktop/CBMMtutorials/project/Computational Aesthetics/pdfs/",
-    "download.prompt_for_download": True,
-    "download.directory_upgrade": True,
-    "plugins.always_open_pdf_externally": True
+    "download.prompt_for_download": False,
+    "download.directory_upgrade": False,
+    "plugins.always_open_pdf_externally": False
     }
 )
 
@@ -94,6 +93,17 @@ authenticate(driver, URL)
 DATAURL = "https://www.sixfold.org/issues.html"
 driver.get(DATAURL)
 issueslink = [element.find_element(By.TAG_NAME, 'a').get_attribute('href') for element in driver.find_elements(By.ID, "issues")]
+
+# for issuelink in issueslink:
+#     driver.get(issuelink)
+#     flag = True
+#     while(flag):
+#         try:
+#             driver.find_element(By.XPATH, "// a[contains(text(),\'Next')]").click()
+#             issueslink.append(driver.current_url)
+#         except:
+#             flag = False
+
 
 bios = list()
 names = list()
@@ -106,12 +116,3 @@ for issuelink in issueslink:
     driver.get(issuelink)
     table = driver.find_element(By.ID, "bigresults")
     save_drop_menu_tables(table)
-
-
-
-
-# actions = ActionChains(driver)
-# actions.move_by_offset(512, 512).click().perform()
-# import time
-# time.sleep(5)
-#driver.quit()
