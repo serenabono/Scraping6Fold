@@ -6,6 +6,7 @@ from selenium.webdriver.chrome.options import Options
 import time
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.common.action_chains import ActionChains
 
 def generate_dataframe(bios, names):
     df = pd.DataFrame({"names": names, "bios":bios})
@@ -23,8 +24,8 @@ def authenticate(driver, authorpath):
     driver.find_element("name", "pass").send_keys(password)
     driver.find_element(By.CSS_SELECTOR, "button").click()
 
-def save_tables(table):
-    with open(f'table.csv', 'a', newline='') as csvfile:
+def save_tables(table, filepath):
+    with open(filepath, 'a', newline='') as csvfile:
         wr = csv.writer(csvfile)
         for row in table.find_elements(By.CSS_SELECTOR,'tr'):
             text = list()
@@ -36,6 +37,36 @@ def save_tables(table):
             for d in row.find_elements(By.CSS_SELECTOR,'td'):                
                 text.append(d.text)
             wr.writerow(text)
+
+def save_list(table, filepath):
+    with open(filepath, 'a', newline='') as csvfile:
+        wr = csv.writer(csvfile)
+        text = list()
+        print(table.find_elements(By.XPATH, "//*[contains(@class, 'round')]"))
+        for row in table.find_elements(By.XPATH, "//*[contains(@class, 'round')]"):
+            text = list()
+            for d in row.find_elements(By.CSS_SELECTOR,'li'):                
+                text.append(d.text)
+            wr.writerow(text)
+
+def save_drop_menu_tables(table):
+    for row in table.find_elements(By.CSS_SELECTOR,'tr'):
+        docid = row.get_attribute("id")
+        try: 
+            elem = row.find_elements(By.CSS_SELECTOR,'td')[0]
+        except:
+            continue
+        actions = ActionChains(driver)
+        actions.move_to_element(elem)
+        actions.click()
+        actions.perform()
+        string = "votes"+str(docid)
+        time.sleep(1)
+        table = driver.find_element(By.ID, string)
+        save_list(table, "table_drop_down_menu.csv")
+        string2 = "$('tr#votes" + str(docid) + "').slideUp();"
+        driver.execute_script(string2)
+        
 
 def save_links(table):
     links = []
@@ -64,17 +95,6 @@ DATAURL = "https://www.sixfold.org/issues.html"
 driver.get(DATAURL)
 issueslink = [element.find_element(By.TAG_NAME, 'a').get_attribute('href') for element in driver.find_elements(By.ID, "issues")]
 
-for issuelink in issueslink:
-    driver.get(issuelink)
-    flag = True
-    while(flag):
-        try:
-            driver.find_element(By.XPATH, "// a[contains(text(),\'Next')]").click()
-            issueslink.append(driver.current_url)
-        except:
-            flag = False
-
-
 bios = list()
 names = list()
 pdfs = list()
@@ -85,8 +105,13 @@ for issuelink in issueslink:
     i+=1
     driver.get(issuelink)
     table = driver.find_element(By.ID, "bigresults")
-    save_tables(table)
-
-driver.quit()
+    save_drop_menu_tables(table)
 
 
+
+
+# actions = ActionChains(driver)
+# actions.move_by_offset(512, 512).click().perform()
+# import time
+# time.sleep(5)
+#driver.quit()
