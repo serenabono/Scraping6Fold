@@ -3,8 +3,9 @@ from selenium.webdriver.common.by import By
 import pandas as pd
 from selenium.webdriver.chrome.options import Options
 import time
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as EC 
 import glob
 import os
 
@@ -87,10 +88,10 @@ pdfs = pd.read_csv("table.csv")
 
 for url in pdfs["id"]:
     response = driver.get(url)
+    #WebDriverWait(driver, 60).until(EC.presence_of_element_located((By.ID, "icon")))
     time.sleep(1)
     path = getDownLoadedFileName(download_dir)
     text = convert_pdf_to_txt(path)
-
     with open("text_dataset.csv", 'a', newline='') as csvfile:
         csv_columns = ["docid", "text"]
         wr = csv.DictWriter(csvfile, fieldnames=csv_columns)
