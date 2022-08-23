@@ -23,16 +23,18 @@ def authenticate(driver, authorpath):
     driver.find_element("name", "pass").send_keys(password)
     driver.find_element(By.CSS_SELECTOR, "button").click()
 
-def save_tables(table):
-    with open(f'table.csv', 'a', newline='') as csvfile:
+def save_tables(table, typetext, nametext):
+    with open(f'table_with_names.csv', 'a', newline='') as csvfile:
         wr = csv.writer(csvfile)
         for row in table.find_elements(By.CSS_SELECTOR,'tr'):
             text = list()
-            try: 
+            try:
                 link = row.find_elements(By.CSS_SELECTOR,'td')[0].find_element(By.TAG_NAME, 'a').get_attribute('href')
-                text.append(link)
             except:
-                continue
+                link=""
+            text.append(link)
+            text.append(nametext)
+            text.append(typetext)
             for d in row.find_elements(By.CSS_SELECTOR,'td'):                
                 text.append(d.text)
             wr.writerow(text)
@@ -74,7 +76,7 @@ for issuelink in issuelinkcopy:
             issueslink.append(driver.current_url)
         except:
             flag = False
-
+import re
 
 bios = list()
 names = list()
@@ -85,7 +87,13 @@ i = 0
 for issuelink in issueslink:
     i+=1
     driver.get(issuelink)
+    type = driver.find_element(By.CLASS_NAME, 'lighten')
+    nametext = re.findall(r'\|(.*?)\|', type.text)
+    if "Fiction" in type.text:
+        typetext = "fiction"
+    else:
+        typetext = "poetry"
     table =  driver.find_element(By.ID, "bigresults")
-    save_tables(table)
+    save_tables(table, typetext, nametext[0])
 
 driver.quit()
