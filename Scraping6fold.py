@@ -26,7 +26,7 @@ def authenticate(driver, authorpath):
 def save_tables(table, typetext, nametext):
     with open(f'table_with_names.csv', 'a', newline='') as csvfile:
         wr = csv.writer(csvfile)
-        for row in table.find_elements(By.CSS_SELECTOR,'tr'):
+        for row in table.find_elements(By.CSS_SELECTOR,'tr')[1:]:
             text = list()
             try:
                 link = row.find_elements(By.CSS_SELECTOR,'td')[0].find_element(By.TAG_NAME, 'a').get_attribute('href')
@@ -53,20 +53,24 @@ def save_bios(table):
         wr = csv.writer(csvfile)
         links = list()
         names = list()
-        for row in table.find_elements(By.CSS_SELECTOR,'tr'):
+        for row in table.find_elements(By.CSS_SELECTOR,'tr')[1:]:
             text = list()
+            name = row.find_elements(By.CSS_SELECTOR,'td')[1]
             try:
-                name = row.find_elements(By.CSS_SELECTOR,'td')[1]
                 link =  row.find_elements(By.CSS_SELECTOR,'td')[1].find_element(By.TAG_NAME, 'a').get_attribute('href')
                 text.append(name.text)
             except:
-                continue
+               link = ""
+               text = ""
             names.append(name.text)
             links.append(link)
         for (i,link) in enumerate(links):
             text = list()
-            driver.get(link)
-            description = get_bio(driver)
+            try:
+                driver.get(link)
+                description = get_bio(driver)
+            except:
+                description = ""
             text.append(link)
             text.append(names[i])
             text.append(description)
@@ -103,16 +107,16 @@ driver.get(DATAURL)
 issueslink = [element.find_element(By.TAG_NAME, 'a').get_attribute('href') for element in driver.find_elements(By.ID, "issues")]
 issuelinkcopy = issueslink.copy()
 
-for issuelink in issuelinkcopy:
-    driver.get(issuelink)
-    flag = True
-    while(flag):
-        try:
-            driver.find_element(By.XPATH, "// a[contains(text(),\'Next')]").click()
-            issueslink.append(driver.current_url)
-            print(driver.current_url)
-        except:
-            flag = False
+# for issuelink in issuelinkcopy:
+#     driver.get(issuelink)
+#     flag = True
+#     while(flag):
+#         try:
+#             driver.find_element(By.XPATH, "// a[contains(text(),\'Next')]").click()
+#             issueslink.append(driver.current_url)
+#             print(driver.current_url)
+#         except:
+#             flag = False
 
 import re
 

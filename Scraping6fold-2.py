@@ -116,7 +116,6 @@ for issuelink in issueslinkcopy:
         except:
             flag = False
 
-print(issueslink)
 
 # bios = list()
 # names = list()
