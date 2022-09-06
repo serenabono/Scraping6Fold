@@ -45,6 +45,8 @@ def save_list(table, filepath, identifier, title):
         i=0
         for round in table.find_elements(By.CLASS_NAME, "round"):
             for d in round.find_elements(By.CSS_SELECTOR,'li'):
+                if d.find_elements(By.TAG_NAME, "span")[0].text == "":
+                    print(d.find_elements(By.TAG_NAME, "span").text)
                 row = {"docid": identifier,"title":title, "round": i, "author": d.find_elements(By.TAG_NAME, "span")[0].text, "score": d.find_elements(By.TAG_NAME, "span")[1].text}
                 wr.writerow(row)
             i+=1
@@ -53,19 +55,29 @@ def save_drop_menu_tables(table):
     for row in table.find_elements(By.CSS_SELECTOR,'tr')[1:]:
         docid = row.get_attribute("id")
         title = row.find_elements(By.CSS_SELECTOR,'td')[1].text
-        elem = row.find_elements(By.CSS_SELECTOR,'td')[4]
+        elem = row.find_elements(By.CSS_SELECTOR,'td')[2]
         try:
             link = row.find_elements(By.CSS_SELECTOR,'td')[0].find_element(By.TAG_NAME, 'a').get_attribute('href')
         except:
             link = ""
-        actions = ActionChains(driver)
-        actions.move_to_element(elem)
-        actions.click()
-        actions.perform()
-        string = "votes"+str(docid)
-        table = WebDriverWait(driver, 3).until(
-            EC.presence_of_element_located((By.ID, string))
-        )
+        exception=True
+        n=0
+        while exception:
+            exception=False
+            actions = ActionChains(driver)
+            actions.move_to_element(elem)
+            actions.click()
+            actions.perform()
+            string = "votes"+str(docid)
+            try:
+                table = WebDriverWait(driver, 5).until(
+                    EC.presence_of_element_located((By.ID, string))
+                )
+            except:
+                exception=True
+                print("#exc, ",n)
+                n+=1
+            
         save_list(table, "table_drop_down_menu.csv", link, title)
         string2 = "$('tr#votes" + str(docid) + "').slideUp();"
         driver.execute_script(string2)
