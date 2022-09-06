@@ -91,7 +91,7 @@ driver.get(DATAURL)
 issueslink = [element.find_element(By.TAG_NAME, 'a').get_attribute('href') for element in driver.find_elements(By.ID, "issues")]
 issuelinkcopy = issueslink.copy()
 
-for issuelink in issueslinkcopy:
+for issuelink in issuelinkcopy:
     driver.get(issuelink)
     flag = True
     while(flag):
