@@ -39,6 +39,39 @@ def save_tables(table, typetext, nametext):
                 text.append(d.text)
             wr.writerow(text)
 
+def get_bio(bio):
+    body = bio.find_element(By.ID, "body")
+    description = body.find_elements(By.CSS_SELECTOR, "p")
+    if len(description) == 1:
+        return ""
+    else:
+        return description[0].text
+
+
+def save_bios(table):
+    with open(f'bios.csv', 'a', newline='') as csvfile:
+        wr = csv.writer(csvfile)
+        links = list()
+        names = list()
+        for row in table.find_elements(By.CSS_SELECTOR,'tr'):
+            text = list()
+            try:
+                name = row.find_elements(By.CSS_SELECTOR,'td')[1]
+                link =  row.find_elements(By.CSS_SELECTOR,'td')[1].find_element(By.TAG_NAME, 'a').get_attribute('href')
+                text.append(name.text)
+            except:
+                continue
+            names.append(name.text)
+            links.append(link)
+        for (i,link) in enumerate(links):
+            text = list()
+            driver.get(link)
+            description = get_bio(driver)
+            text.append(link)
+            text.append(names[i])
+            text.append(description)
+            wr.writerow(text)
+
 def save_links(table):
     links = []
     for row in table.find_elements(By.CSS_SELECTOR,'tr'):
@@ -53,8 +86,8 @@ def save_links(table):
 chrome_options = Options()
 chrome_options.add_experimental_option('prefs',  {
     "download.default_directory": "/home/serena/Desktop/CBMMtutorials/project/Computational Aesthetics/pdfs/",
-    "download.prompt_for_download": True,
-    "download.directory_upgrade": True,
+    "download.prompt_for_download": False,
+    "download.directory_upgrade": False,
     "plugins.always_open_pdf_externally": True
     }
 )
@@ -76,6 +109,7 @@ for issuelink in issuelinkcopy:
             issueslink.append(driver.current_url)
         except:
             flag = False
+
 import re
 
 bios = list()
@@ -83,17 +117,26 @@ names = list()
 pdfs = list()
 pdfTitles = list()
 
+savebios = False
 i = 0
-for issuelink in issueslink:
-    i+=1
-    driver.get(issuelink)
-    type = driver.find_element(By.CLASS_NAME, 'lighten')
-    nametext = re.findall(r'\|(.*?)\|', type.text)
-    if "Fiction" in type.text:
-        typetext = "fiction"
-    else:
-        typetext = "poetry"
-    table =  driver.find_element(By.ID, "bigresults")
-    save_tables(table, typetext, nametext[0])
+if savebios:
+    for issuelink in issueslink:
+        i+=1
+        driver.get(issuelink)
+        table =  driver.find_element(By.ID, "bigresults")
+        save_bios(table)
+else:
+    for issuelink in issueslink:
+        i+=1
+        driver.get(issuelink)
+        type = driver.find_element(By.CLASS_NAME, 'lighten')
+        nametext = re.findall(r'\|(.*?)\|', type.text)
+        if "Fiction" in type.text:
+            typetext = "fiction"
+        else:
+            typetext = "poetry"
+        table =  driver.find_element(By.ID, "bigresults")
+        save_tables(table, typetext, nametext[0])
+
 
 driver.quit()
