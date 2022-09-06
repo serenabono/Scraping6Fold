@@ -84,15 +84,19 @@ def save_links(table):
 
   
 chrome_options = Options()
+chrome_options.binary_location = "/home/seb300/local/src/chrome/opt/google/chrome/chrome"
+chrome_options.add_argument("--remote-debugging-port=9222") 
+chrome_options.add_argument('--no-sandbox')
+chrome_options.add_argument('--headless')
 chrome_options.add_experimental_option('prefs',  {
     "download.default_directory": "/home/serena/Desktop/CBMMtutorials/project/Computational Aesthetics/pdfs/",
-    "download.prompt_for_download": False,
-    "download.directory_upgrade": False,
+    "download.prompt_for_download": True,
+    "download.directory_upgrade": True,
     "plugins.always_open_pdf_externally": True
     }
 )
 
-driver=webdriver.Chrome("chromedriver", options=chrome_options)
+driver=webdriver.Chrome("/home/seb300/chromedriver/chromedriver", options=chrome_options)
 URL = "https://www.sixfold.org/login"
 authenticate(driver, URL)
 DATAURL = "https://www.sixfold.org/issues.html"
