@@ -38,22 +38,24 @@ def save_tables(table, filepath):
                 text.append(d.text)
             wr.writerow(text)
 
-def save_list(table, filepath, identifier, title):
+def save_list(table, filepath, identifier,name, title,  nametext, typetext):
     with open(filepath, 'a', newline='') as csvfile:
-        csv_columns = ['docid','title','round','author','score']
+        csv_columns = ['docid','author','namecontext','typecontext','title','round','author','score']
         wr = csv.DictWriter(csvfile, fieldnames=csv_columns)
         i=0
         for round in table.find_elements(By.CLASS_NAME, "round"):
             for d in round.find_elements(By.CSS_SELECTOR,'li'):
-                if d.find_elements(By.TAG_NAME, "span")[0].text == "":
-                    print(d.find_elements(By.TAG_NAME, "span").text)
-                row = {"docid": identifier,"title":title, "round": i, "author": d.find_elements(By.TAG_NAME, "span")[0].text, "score": d.find_elements(By.TAG_NAME, "span")[1].text}
+                player = WebDriverWait(d, 5).until(
+                    EC.presence_of_element_located((By.CLASS_NAME, "player"))
+                )
+                row = {"docid": identifier,"author":name, "namecontext":namecontext,"typecontext":typecontext ,"title":title, "round": i, "author": d.find_element(By.CLASS_NAME, "player").get_attribute('textContent'), "score": d.find_element(By.CLASS_NAME, "vote").get_attribute('textContent')}
                 wr.writerow(row)
             i+=1
 
-def save_drop_menu_tables(table):
+def save_drop_menu_tables(table,  nametext, typetext):
     for row in table.find_elements(By.CSS_SELECTOR,'tr')[1:]:
         docid = row.get_attribute("id")
+        name = row.find_elements(By.CSS_SELECTOR,'td')[0].text
         title = row.find_elements(By.CSS_SELECTOR,'td')[1].text
         elem = row.find_elements(By.CSS_SELECTOR,'td')[2]
         try:
@@ -61,15 +63,16 @@ def save_drop_menu_tables(table):
         except:
             link = ""
         exception=True
+        contin = False
         n=0
         while exception:
             exception=False
-            actions = ActionChains(driver)
-            actions.move_to_element(elem)
-            actions.click()
-            actions.perform()
-            string = "votes"+str(docid)
             try:
+                actions = ActionChains(driver)
+                actions.move_to_element(elem)
+                actions.click()
+                actions.perform()
+                string = "votes"+str(docid)
                 table = WebDriverWait(driver, 5).until(
                     EC.presence_of_element_located((By.ID, string))
                 )
@@ -77,8 +80,15 @@ def save_drop_menu_tables(table):
                 exception=True
                 print("#exc, ",n)
                 n+=1
-            
-        save_list(table, "table_drop_down_menu.csv", link, title)
+                time.sleep(n)
+                if n>5:
+                    exception=False
+                    contin = True
+        if contin:
+            print("AUCH")
+            continue
+        
+        save_list(table, "table_drop_down_menu.csv", link, name, title, nametext, typetext)
         string2 = "$('tr#votes" + str(docid) + "').slideUp();"
         driver.execute_script(string2)
 
@@ -124,5 +134,11 @@ i = 0
 for issuelink in issueslink:
     i+=1
     driver.get(issuelink)
+    type = driver.find_element(By.CLASS_NAME, 'lighten')
+    nametext = re.findall(r'\|(.*?)\|', type.text)
+    if "Fiction" in type.text:
+        typetext = "fiction"
+    else:
+        typetext = "poetry"
     table = driver.find_element(By.ID, "bigresults")
-    save_drop_menu_tables(table)
+    save_drop_menu_tables(table, nametext[0], typetext)
