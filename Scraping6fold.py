@@ -82,7 +82,6 @@ def save_links(table):
                 pass
     return links
 
-# cluster related config  
 chrome_options = Options()
 chrome_options.binary_location = "/home/seb300/local/src/chrome/opt/google/chrome/chrome"
 chrome_options.add_argument("--remote-debugging-port=9222") 
