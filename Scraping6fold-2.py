@@ -38,52 +38,37 @@ def save_tables(table, filepath):
                 text.append(d.text)
             wr.writerow(text)
 
-def save_list(table, filepath, identifier):
+def save_list(table, filepath, identifier, title):
     with open(filepath, 'a', newline='') as csvfile:
-        csv_columns = ['docid','round','author','score']
+        csv_columns = ['docid','title','round','author','score']
         wr = csv.DictWriter(csvfile, fieldnames=csv_columns)
         i=0
         for round in table.find_elements(By.CLASS_NAME, "round"):
             for d in round.find_elements(By.CSS_SELECTOR,'li'):
-                row = {"docid": identifier, "round": i, "author": d.find_elements(By.TAG_NAME, "span")[0].text, "score": d.find_elements(By.TAG_NAME, "span")[1].text}
+                row = {"docid": identifier,"title":title, "round": i, "author": d.find_elements(By.TAG_NAME, "span")[0].text, "score": d.find_elements(By.TAG_NAME, "span")[1].text}
                 wr.writerow(row)
             i+=1
 
 def save_drop_menu_tables(table):
-    for row in table.find_elements(By.CSS_SELECTOR,'tr'):
+    for row in table.find_elements(By.CSS_SELECTOR,'tr')[1:]:
         docid = row.get_attribute("id")
-        try: 
-            elem = row.find_elements(By.CSS_SELECTOR,'td')[4]
+        title = row.find_elements(By.CSS_SELECTOR,'td')[1].text
+        elem = row.find_elements(By.CSS_SELECTOR,'td')[4]
+        try:
             link = row.find_elements(By.CSS_SELECTOR,'td')[0].find_element(By.TAG_NAME, 'a').get_attribute('href')
         except:
-            continue
+            link = ""
         actions = ActionChains(driver)
         actions.move_to_element(elem)
         actions.click()
         actions.perform()
         string = "votes"+str(docid)
-        try:
-            table = WebDriverWait(driver, 2).until(
-                EC.presence_of_element_located((By.ID, string))
-            )
-        except:
-            continue
-        #table = driver.find_element(By.ID, string)
-        save_list(table, "table_drop_down_menu.csv", link)
+        table = WebDriverWait(driver, 3).until(
+            EC.presence_of_element_located((By.ID, string))
+        )
+        save_list(table, "table_drop_down_menu.csv", link, title)
         string2 = "$('tr#votes" + str(docid) + "').slideUp();"
         driver.execute_script(string2)
-        
-
-# def save_links(table):
-#     links = []
-#     for row in table.find_elements(By.CSS_SELECTOR,'tr'):
-#         for d in row.find_elements(By.CSS_SELECTOR,'td'):
-#             try: 
-#                 links.append(d.find_element(By.TAG_NAME, 'a').get_attribute('href'))
-#             except:
-#                 pass
-#     return links
-
 
 chrome_options = Options()
 chrome_options.add_experimental_option('prefs',  {
@@ -103,25 +88,24 @@ issueslink = [element.find_element(By.TAG_NAME, 'a').get_attribute('href') for e
 
 issueslinkcopy = issueslink.copy()
 
-for issuelink in issueslinkcopy:
-    driver.get(issuelink)
-    flag = True
-    while(flag):
-        try:
-            driver.find_element(By.XPATH, "// a[contains(text(),\'Next')]").click()
-            issueslink.append(driver.current_url)
-        except:
-            flag = False
-
-
-# bios = list()
-# names = list()
-# pdfs = list()
-# pdfTitles = list()
-
-# i = 0
-# for issuelink in issueslink:
-#     i+=1
+# for issuelink in issueslinkcopy:
 #     driver.get(issuelink)
-#     table = driver.find_element(By.ID, "bigresults")
-#     save_drop_menu_tables(table)
+#     flag = True
+#     while(flag):
+#         try:
+#             driver.find_element(By.XPATH, "// a[contains(text(),\'Next')]").click()
+#             issueslink.append(driver.current_url)
+#         except:
+#             flag = False
+
+bios = list()
+names = list()
+pdfs = list()
+pdfTitles = list()
+
+i = 0
+for issuelink in issueslink:
+    i+=1
+    driver.get(issuelink)
+    table = driver.find_element(By.ID, "bigresults")
+    save_drop_menu_tables(table)

@@ -104,16 +104,16 @@ driver.get(DATAURL)
 issueslink = [element.find_element(By.TAG_NAME, 'a').get_attribute('href') for element in driver.find_elements(By.ID, "issues")]
 issuelinkcopy = issueslink.copy()
 
-# for issuelink in issuelinkcopy:
-#     driver.get(issuelink)
-#     flag = True
-#     while(flag):
-#         try:
-#             driver.find_element(By.XPATH, "// a[contains(text(),\'Next')]").click()
-#             issueslink.append(driver.current_url)
-#             print(driver.current_url)
-#         except:
-#             flag = False
+for issuelink in issuelinkcopy:
+    driver.get(issuelink)
+    flag = True
+    while(flag):
+        try:
+            driver.find_element(By.XPATH, "// a[contains(text(),\'Next')]").click()
+            issueslink.append(driver.current_url)
+            print(driver.current_url)
+        except:
+            flag = False
 
 import re
 
