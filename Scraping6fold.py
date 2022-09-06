@@ -107,6 +107,7 @@ for issuelink in issuelinkcopy:
         try:
             driver.find_element(By.XPATH, "// a[contains(text(),\'Next')]").click()
             issueslink.append(driver.current_url)
+            print(driver.current_url)
         except:
             flag = False
 
@@ -119,24 +120,19 @@ pdfTitles = list()
 
 savebios = False
 i = 0
-if savebios:
-    for issuelink in issueslink:
-        i+=1
-        driver.get(issuelink)
-        table =  driver.find_element(By.ID, "bigresults")
-        save_bios(table)
-else:
-    for issuelink in issueslink:
-        i+=1
-        driver.get(issuelink)
-        type = driver.find_element(By.CLASS_NAME, 'lighten')
-        nametext = re.findall(r'\|(.*?)\|', type.text)
-        if "Fiction" in type.text:
-            typetext = "fiction"
-        else:
-            typetext = "poetry"
-        table =  driver.find_element(By.ID, "bigresults")
-        save_tables(table, typetext, nametext[0])
+
+for issuelink in issueslink:
+    i+=1
+    driver.get(issuelink)
+    type = driver.find_element(By.CLASS_NAME, 'lighten')
+    nametext = re.findall(r'\|(.*?)\|', type.text)
+    if "Fiction" in type.text:
+        typetext = "fiction"
+    else:
+        typetext = "poetry"
+    table =  driver.find_element(By.ID, "bigresults")
+    save_tables(table, typetext, nametext[0])
+    save_bios(table)
 
 
 driver.quit()
