@@ -62,35 +62,17 @@ def save_drop_menu_tables(table,  nametext, typetext):
             link = row.find_elements(By.CSS_SELECTOR,'td')[0].find_element(By.TAG_NAME, 'a').get_attribute('href')
         except:
             link = ''
-        exception=True
-        contin = False
-        n=0
-        while exception:
-            exception=False
-            try:
-                actions = ActionChains(driver)
-                actions.move_to_element(elem)
-                actions.click()
-                actions.perform()
-                string = 'votes'+str(docid)
-                table = WebDriverWait(driver, 5).until(
-                    EC.presence_of_element_located((By.ID, string))
-                )
-            except:
-                exception=True
-                print('#exc, ',n)
-                n+=1
-                time.sleep(n)
-                if n>5:
-                    exception=False
-                    contin = True
-        if contin:
-            print('AUCH: %s, %s, %s, %s, %s',  link, name, title, nametext, typetext)
-            continue
-        
+        actions = ActionChains(driver)
+        actions.move_to_element(elem)
+        actions.click()
+        actions.perform()
+        string = 'votes'+str(docid)
+        table = WebDriverWait(driver, 5).until(
+            EC.presence_of_element_located((By.ID, string))
+        )        
         save_list(table, 'table_drop_down_menu.csv', link, name, title, nametext, typetext)
         string2 = "$('tr#votes" + str(docid) + "').slideUp();"
-        driver.execute_script(string2)
+        # driver.execute_script(string2)
 
 chrome_options = Options()
 chrome_options.binary_location = '/home/seb300/local/src/chrome/opt/google/chrome/chrome'

@@ -59,15 +59,18 @@ def convert_pdf_to_txt(path):
                                               pagenos,
                                               maxpages=maxpages,
                                               password=password,
-                                              caching=caching,
-                                              check_extractable=True):
+                                              caching=caching):
                     interpreter.process_page(page)
 
                 return retstr.getvalue()
 
 
-download_dir = "/home/serena/Desktop/CBMMtutorials/project/Scraping6Fold/pdfs/"
+download_dir = "pdfs/"
 chrome_options = Options()
+chrome_options.binary_location = "/home/seb300/local/src/chrome/opt/google/chrome/chrome"
+chrome_options.add_argument("--remote-debugging-port=9222") 
+chrome_options.add_argument('--no-sandbox')
+chrome_options.add_argument('--headless')
 chrome_options.add_experimental_option('prefs',  {
     "download.default_directory":  download_dir,
     "download.prompt_for_download": False,
@@ -76,7 +79,7 @@ chrome_options.add_experimental_option('prefs',  {
     }
 )
 
-driver=webdriver.Chrome("chromedriver", options=chrome_options)
+driver=webdriver.Chrome("/home/seb300/chromedriver/chromedriver", options=chrome_options)
 URL = "https://www.sixfold.org/login"
 authenticate(driver, URL)
 DATAURL = "https://www.sixfold.org/issues.html"
@@ -84,14 +87,22 @@ driver.get(DATAURL)
 
 import pandas as pd
 import csv
-pdfs = pd.read_csv("table.csv")
+pdfs = pd.read_csv("table_with_names.csv")
 
 for url in pdfs["id"]:
-    response = driver.get(url)
-    #WebDriverWait(driver, 60).until(EC.presence_of_element_located((By.ID, "icon")))
+    try:
+        response = driver.get(url)
+    except:
+        print(url)
+        continue
     time.sleep(1)
     path = getDownLoadedFileName(download_dir)
-    text = convert_pdf_to_txt(path)
+    try:
+        text = convert_pdf_to_txt(path)
+    except:
+        print(url)
+        text = ""
+        continue
     with open("text_dataset.csv", 'a', newline='') as csvfile:
         csv_columns = ["docid", "text"]
         wr = csv.DictWriter(csvfile, fieldnames=csv_columns)
