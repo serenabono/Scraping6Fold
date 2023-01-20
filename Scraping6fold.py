@@ -13,10 +13,9 @@ def generate_dataframe(bios, names):
 
 
 def authenticate(driver, authorpath):
-    user, password = 'superserena2010@hotmail.com', 'Lorenzo09102000'
     # Github credentials
-    username = "superserena2010@hotmail.com"
-    password = "Lorenzo09102000"
+    username = "username"
+    password = "password"
 
     driver.get(authorpath)
     driver.find_element("name", "email").send_keys(username)
